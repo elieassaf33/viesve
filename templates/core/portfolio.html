@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{% if lang == 'en' %}Projects{% else %}Projektai{% endif %} — Viesvė{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 pt-32 pb-20">
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+    <div>
+      <span class="text-xs uppercase tracking-widest text-[#c89b6e]">{% if lang == 'en' %}Portfolio{% else %}Portfolio{% endif %}</span>
+      <h1 class="font-[family-name:var(--font-display)] text-4xl font-bold mt-2">
+        {% if lang == 'en' %}Realized Projects{% else %}Įgyvendinti projektai{% endif %}
+      </h1>
+    </div>
+    <div class="flex flex-wrap gap-2 text-xs">
+      <a href="{% url 'core:portfolio' %}" class="px-4 py-2 rounded-xl {% if not active_category %}bg-[#c89b6e] text-[#12100e] font-semibold{% else %}glass-light text-stone-300{% endif %}">
+        {% if lang == 'en' %}All{% else %}Visi{% endif %}
+      </a>
+      {% for key, label in categories %}
+      <a href="{% url 'core:portfolio' %}?category={{ key }}" class="px-4 py-2 rounded-xl {% if active_category == key %}bg-[#c89b6e] text-[#12100e] font-semibold{% else %}glass-light text-stone-300{% endif %}">
+        {{ label }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {% for p in projects %}
+    <div class="glass-light rounded-2xl overflow-hidden">
+      <div class="h-52 flex items-end p-5" style="background: linear-gradient(135deg, {{ p.accent_color }}55, #141210);">
+        <span class="px-3 py-1 rounded-lg glass-hud text-xs text-stone-200">{{ p.location }} · {{ p.year }}</span>
+      </div>
+      <div class="p-6">
+        <h2 class="font-[family-name:var(--font-display)] text-xl font-bold text-white">
+          {% if lang == 'en' %}{{ p.title_en }}{% else %}{{ p.title_lt }}{% endif %}
+        </h2>
+        <p class="mt-2 text-sm text-stone-300">
+          {% if lang == 'en' %}{{ p.description_en }}{% else %}{{ p.description_lt }}{% endif %}
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2 text-xs text-stone-400">
+          <span class="px-2.5 py-1 rounded-lg bg-white/5">{{ p.dimensions }}</span>
+          <span class="px-2.5 py-1 rounded-lg bg-white/5">{{ p.wood_finish }}</span>
+          <span class="px-2.5 py-1 rounded-lg bg-white/5">{{ p.roof_type }}</span>
+        </div>
+        {% if p.preset_slug %}
+        <div class="mt-5">
+          <a href="{% url 'configurator:index' %}?preset={{ p.preset_slug }}" class="text-xs text-[#c89b6e] font-semibold hover:underline">
+            {% if lang == 'en' %}Configure similar in 3D →{% else %}Konfigūruoti panašų 3D →{% endif %}
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

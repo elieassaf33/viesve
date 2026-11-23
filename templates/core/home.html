@@ -1,0 +1,234 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- Pinned 3D Scroll-Scrubbing Hero & Exploded Assembly Story -->
+<section id="hero-3d-stage" class="relative w-full h-screen overflow-hidden bg-[#0e0d0b]">
+  <canvas id="hero-3d-canvas" class="absolute inset-0 w-full h-full block"></canvas>
+
+  <!-- Phase 1: 0% - 25% Architectural Reveal -->
+  <div class="hero-phase-1 absolute inset-0 pointer-events-none flex flex-col justify-end pb-16 sm:pb-24 px-6 sm:px-12 max-w-7xl mx-auto">
+    <div class="max-w-2xl pointer-events-auto">
+      <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full glass-hud text-xs uppercase tracking-widest text-[#c89b6e] mb-5">
+        <span class="w-1.5 h-1.5 rounded-full bg-[#c89b6e] animate-pulse"></span>
+        {% if lang == 'en' %}Architectural Timber Structures{% else %}Architektūriniai medžio statiniai{% endif %}
+      </span>
+      <h1 class="font-[family-name:var(--font-display)] text-4xl sm:text-6xl font-bold tracking-tight leading-[1.05] text-white">
+        {% if lang == 'en' %}
+          Precision Timber Pavilions. Crafted in 3D.
+        {% else %}
+          Klasikinė medžio architektūra jūsų kieme.
+        {% endif %}
+      </h1>
+      <p class="mt-4 text-base sm:text-lg text-stone-300 max-w-xl">
+        {% if lang == 'en' %}
+          Scroll to disassemble our 140×140 mm glulam structure, or launch the live parametric 3D configurator.
+        {% else %}
+          Slinkite žemyn, kad pamatytumėte sprogstamąją 140×140 mm konstrukcijos analizę, arba susiprojektuokite savo pavėsinę 3D erdvėje.
+        {% endif %}
+      </p>
+      <div class="mt-7 flex flex-wrap items-center gap-4">
+        <a href="{% url 'configurator:index' %}" class="px-6 py-3.5 rounded-xl bg-[#c89b6e] hover:bg-[#d8ae82] text-[#12100e] font-semibold text-sm transition shadow-xl shadow-[#c89b6e]/20">
+          {% if lang == 'en' %}Configure in 3D →{% else %}Susikonfigūruokite 3D →{% endif %}
+        </a>
+        <a href="#catalog-showcase" class="px-6 py-3.5 rounded-xl glass-hud text-white hover:border-[#c89b6e]/50 text-sm font-medium transition">
+          {% if lang == 'en' %}Explore Models{% else %}Peržiūrėti modelius{% endif %}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2: 25% - 55% Exploded Structural Breakdown -->
+  <div class="hero-phase-2 opacity-0 absolute inset-0 pointer-events-none flex items-center justify-between px-6 sm:px-12 max-w-7xl mx-auto">
+    <div class="glass-hud rounded-2xl p-6 max-w-sm">
+      <div class="text-xs uppercase tracking-widest text-[#c89b6e] mb-2">01 / {% if lang == 'en' %}Exploded Structure{% else %}Konstrukcinis pjūvis{% endif %}</div>
+      <h2 class="font-[family-name:var(--font-display)] text-2xl font-semibold text-white">
+        {% if lang == 'en' %}140×140 mm Glulam Joinery{% else %}140×140 mm klijuotas tašas{% endif %}
+      </h2>
+      <p class="mt-2 text-sm text-stone-300 leading-relaxed">
+        {% if lang == 'en' %}
+          C24 Nordic spruce laminated posts, CNC mortise-and-tenon joinery, and 28 mm tongue-and-groove cladding built for Baltic winters.
+        {% else %}
+          Šiaurinės eglės C24 klijuotos medienos stulpai, CNC tikslumo sujungimai ir 28 mm špuntuotos sienų lentos atsparios Baltijos klimatui.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="hidden md:flex flex-col gap-3">
+      <div class="glass-hud rounded-xl px-4 py-3 text-xs">
+        <div class="text-[#c89b6e] font-semibold">140 × 140 mm</div>
+        <div class="text-stone-300">{% if lang == 'en' %}Laminated Corner Posts{% else %}Klijuoti kampiniai stulpai{% endif %}</div>
+      </div>
+      <div class="glass-hud rounded-xl px-4 py-3 text-xs">
+        <div class="text-[#c89b6e] font-semibold">10 mm Tempered</div>
+        <div class="text-stone-300">{% if lang == 'en' %}Sliding Glass System{% else %}Grūdinto stiklo sistema{% endif %}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 3: 55% - 80% Material & Interior Glide -->
+  <div class="hero-phase-3 opacity-0 absolute inset-0 pointer-events-none flex items-end justify-end pb-20 px-6 sm:px-12 max-w-7xl mx-auto">
+    <div class="glass-hud rounded-2xl p-6 max-w-md">
+      <div class="text-xs uppercase tracking-widest text-[#c89b6e] mb-2">02 / {% if lang == 'en' %}Finishes & Living Space{% else %}Apdaila ir erdvė{% endif %}</div>
+      <h2 class="font-[family-name:var(--font-display)] text-2xl font-semibold text-white">
+        {% if lang == 'en' %}Natural Pine → Teak → Anthracite{% else %}Natūrali pušis → Tikas → Antracitas{% endif %}
+      </h2>
+      <p class="mt-2 text-sm text-stone-300">
+        {% if lang == 'en' %}
+          Factory-applied UV-resistant timber stains paired with effortless panoramic sliding glass doors.
+        {% else %}
+          Gamyklinis impregnavimas ir lengvai slankiojančios grūdinto stiklo durys komfortiškam poilsiui bet kokiu oru.
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- Phase 4: 80% - 100% Handoff to Configurator -->
+  <div class="hero-phase-4 opacity-0 absolute inset-0 pointer-events-none flex items-center justify-center px-6 text-center">
+    <div class="glass-hud rounded-3xl p-8 sm:p-10 max-w-lg pointer-events-auto">
+      <div class="text-xs uppercase tracking-widest text-[#c89b6e] mb-2">03 / {% if lang == 'en' %}Ready to Design{% else %}Sukurkite savo{% endif %}</div>
+      <h2 class="font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-white">
+        {% if lang == 'en' %}Every Millimeter Parametric{% else %}Kiekvienas centimetras jūsų rankose{% endif %}
+      </h2>
+      <p class="mt-3 text-sm text-stone-300">
+        {% if lang == 'en' %}
+          Adjust dimensions from 250 to 600 cm, customize each wall bay, see live pricing, and preview in AR.
+        {% else %}
+          Keiskite matmenis nuo 250 iki 600 cm, rinkitės sienas ir stiklą, matykite tikslią sąmatą ir išbandykite AR savo kieme.
+        {% endif %}
+      </p>
+      <a href="{% url 'configurator:index' %}" class="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#c89b6e] hover:bg-[#d8ae82] text-[#12100e] font-semibold text-sm transition">
+        {% if lang == 'en' %}Launch 3D Configurator{% else %}Atidaryti 3D Konfiguratorių{% endif %}
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Product Category & Model Showcase -->
+<section id="catalog-showcase" class="max-w-7xl mx-auto px-6 py-24">
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+    <div>
+      <span class="text-xs uppercase tracking-widest text-[#c89b6e]">{% if lang == 'en' %}Architectural Lineup{% else %}Produktų linija{% endif %}</span>
+      <h2 class="font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold mt-2">
+        {% if lang == 'en' %}Gazebos, Pergolas & Carports{% else %}Pavėsinės, Pergolos ir Stoginės{% endif %}
+      </h2>
+    </div>
+    <a href="{% url 'catalog:list' %}" class="text-sm text-[#c89b6e] hover:underline">
+      {% if lang == 'en' %}View all models →{% else %}Visi modeliai →{% endif %}
+    </a>
+  </div>
+
+  <!-- Categories -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-14">
+    {% for cat in categories %}
+    <a href="{% url 'catalog:list' %}?category={{ cat.slug }}" class="reveal-card glass-light rounded-2xl p-6 hover:border-[#c89b6e]/50 transition group">
+      <div class="w-10 h-10 rounded-xl bg-[#c89b6e]/15 text-[#c89b6e] flex items-center justify-center font-semibold mb-4 group-hover:bg-[#c89b6e] group-hover:text-[#12100e] transition">
+        0{{ forloop.counter }}
+      </div>
+      <h3 class="font-[family-name:var(--font-display)] text-lg font-semibold text-white">
+        {% if lang == 'en' %}{{ cat.name_en }}{% else %}{{ cat.name_lt }}{% endif %}
+      </h3>
+      <p class="mt-2 text-xs text-stone-400 leading-relaxed">
+        {% if lang == 'en' %}{{ cat.description_en }}{% else %}{{ cat.description_lt }}{% endif %}
+      </p>
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Featured Parametric Presets -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {% for model in featured_models %}
+    <div class="reveal-card glass-light rounded-2xl p-7 flex flex-col justify-between hover:border-[#c89b6e]/40 transition">
+      <div>
+        <div class="flex items-center justify-between text-xs text-stone-400 mb-3">
+          <span class="uppercase tracking-wider text-[#c89b6e]">
+            {% if lang == 'en' %}{{ model.category.name_en }}{% else %}{{ model.category.name_lt }}{% endif %}
+          </span>
+          <span>{% if lang == 'en' %}From{% else %}Nuo{% endif %} <strong class="text-white text-sm">{{ model.base_price|floatformat:0 }} €</strong></span>
+        </div>
+        <h3 class="font-[family-name:var(--font-display)] text-2xl font-bold text-white">
+          {% if lang == 'en' %}{{ model.name_en }}{% else %}{{ model.name_lt }}{% endif %}
+        </h3>
+        <p class="mt-2 text-sm text-stone-300">
+          {% if lang == 'en' %}{{ model.description_en }}{% else %}{{ model.description_lt }}{% endif %}
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2 text-xs text-stone-400">
+          <span class="px-2.5 py-1 rounded-lg bg-white/5">{{ model.default_config_json.width }} × {{ model.default_config_json.depth }} cm</span>
+          <span class="px-2.5 py-1 rounded-lg bg-white/5">{{ model.specs_json.posts }}</span>
+          <span class="px-2.5 py-1 rounded-lg bg-white/5">{{ model.specs_json.roof }}</span>
+        </div>
+      </div>
+      <div class="mt-6 pt-5 border-t border-white/10 flex items-center justify-between">
+        <a href="{% url 'catalog:detail' model.slug %}" class="text-xs text-stone-300 hover:text-white">
+          {% if lang == 'en' %}Specifications{% else %}Specifikacijos{% endif %}
+        </a>
+        <a href="{% url 'configurator:index' %}?preset={{ model.slug }}" class="px-4 py-2 rounded-xl bg-[#c89b6e]/15 hover:bg-[#c89b6e] text-[#c89b6e] hover:text-[#12100e] text-xs font-semibold transition">
+          {% if lang == 'en' %}Open in 3D Configurator{% else %}Atidaryti 3D konfiguratoriuje{% endif %}
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Portfolio / Realized Projects Grid with Lightbox -->
+<section class="max-w-7xl mx-auto px-6 py-16" x-data="{ activeProject: null }">
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+    <div>
+      <span class="text-xs uppercase tracking-widest text-[#c89b6e]">{% if lang == 'en' %}Realized Work{% else %}Įgyvendinti projektai{% endif %}</span>
+      <h2 class="font-[family-name:var(--font-display)] text-3xl font-bold mt-2">
+        {% if lang == 'en' %}Crafted Across Lithuania{% else %}Projektai visoje Lietuvoje{% endif %}
+      </h2>
+    </div>
+    <a href="{% url 'core:portfolio' %}" class="text-sm text-[#c89b6e] hover:underline">
+      {% if lang == 'en' %}All projects →{% else %}Visi projektai →{% endif %}
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    {% for p in portfolio_projects %}
+    <div
+      @click="activeProject = { title: '{% if lang == 'en' %}{{ p.title_en|escapejs }}{% else %}{{ p.title_lt|escapejs }}{% endif %}', dims: '{{ p.dimensions|escapejs }}', wood: '{{ p.wood_finish|escapejs }}', roof: '{{ p.roof_type|escapejs }}', location: '{{ p.location|escapejs }}', desc: '{% if lang == 'en' %}{{ p.description_en|escapejs }}{% else %}{{ p.description_lt|escapejs }}{% endif %}', preset: '{{ p.preset_slug|escapejs }}' }"
+      class="reveal-card cursor-pointer glass-light rounded-2xl overflow-hidden hover:border-[#c89b6e]/50 transition group"
+    >
+      <div class="h-44 relative flex items-end p-4" style="background: linear-gradient(135deg, {{ p.accent_color }}44, #141210);">
+        <span class="text-[11px] uppercase tracking-wider px-2.5 py-1 rounded-md glass-hud text-stone-200">{{ p.location }} · {{ p.year }}</span>
+      </div>
+      <div class="p-5">
+        <h3 class="font-[family-name:var(--font-display)] font-semibold text-white group-hover:text-[#c89b6e] transition">
+          {% if lang == 'en' %}{{ p.title_en }}{% else %}{{ p.title_lt }}{% endif %}
+        </h3>
+        <div class="mt-2 text-xs text-stone-400">{{ p.dimensions }} · {{ p.wood_finish }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div x-show="activeProject" x-cloak class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" @click.self="activeProject = null">
+    <div class="glass-hud rounded-2xl max-w-lg w-full p-7 relative" x-show="activeProject">
+      <button @click="activeProject = null" class="absolute top-4 right-4 text-stone-400 hover:text-white text-xl">&times;</button>
+      <div class="text-xs uppercase tracking-widest text-[#c89b6e]" x-text="activeProject?.location"></div>
+      <h3 class="font-[family-name:var(--font-display)] text-2xl font-bold text-white mt-1" x-text="activeProject?.title"></h3>
+      <p class="mt-3 text-sm text-stone-300" x-text="activeProject?.desc"></p>
+      <div class="mt-5 grid grid-cols-2 gap-3 text-xs">
+        <div class="bg-white/5 rounded-xl p-3">
+          <div class="text-stone-400">{% if lang == 'en' %}Dimensions{% else %}Matmenys{% endif %}</div>
+          <div class="text-white font-semibold mt-0.5" x-text="activeProject?.dims"></div>
+        </div>
+        <div class="bg-white/5 rounded-xl p-3">
+          <div class="text-stone-400">{% if lang == 'en' %}Finish{% else %}Apdaila{% endif %}</div>
+          <div class="text-white font-semibold mt-0.5" x-text="activeProject?.wood"></div>
+        </div>
+      </div>
+      <template x-if="activeProject?.preset">
+        <a :href="'{% url 'configurator:index' %}?preset=' + activeProject.preset" class="mt-6 block text-center px-5 py-3 rounded-xl bg-[#c89b6e] text-[#12100e] font-semibold text-sm">
+          {% if lang == 'en' %}Load Similar in 3D Configurator{% else %}Atidaryti panašų 3D konfiguratoriuje{% endif %}
+        </a>
+      </template>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+

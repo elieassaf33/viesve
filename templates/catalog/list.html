@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{% if lang == 'en' %}Catalog{% else %}Katalogas{% endif %} — Viesvė{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 pt-32 pb-20">
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+    <div>
+      <span class="text-xs uppercase tracking-widest text-[#c89b6e]">Viesvė</span>
+      <h1 class="font-[family-name:var(--font-display)] text-4xl font-bold mt-2">
+        {% if lang == 'en' %}Timber Structure Catalog{% else %}Medinių statinių katalogas{% endif %}
+      </h1>
+    </div>
+    <div class="flex flex-wrap gap-2 text-xs">
+      <a href="{% url 'catalog:list' %}" class="px-4 py-2 rounded-xl {% if not active_category %}bg-[#c89b6e] text-[#12100e] font-semibold{% else %}glass-light text-stone-300{% endif %}">
+        {% if lang == 'en' %}All{% else %}Visi{% endif %}
+      </a>
+      {% for cat in categories %}
+      <a href="{% url 'catalog:list' %}?category={{ cat.slug }}" class="px-4 py-2 rounded-xl {% if active_category == cat.slug %}bg-[#c89b6e] text-[#12100e] font-semibold{% else %}glass-light text-stone-300{% endif %}">
+        {% if lang == 'en' %}{{ cat.name_en }}{% else %}{{ cat.name_lt }}{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for model in models %}
+    <div class="glass-light rounded-2xl p-6 flex flex-col justify-between">
+      <div>
+        <div class="text-xs uppercase tracking-wider text-[#c89b6e] mb-2">
+          {% if lang == 'en' %}{{ model.category.name_en }}{% else %}{{ model.category.name_lt }}{% endif %}
+        </div>
+        <h2 class="font-[family-name:var(--font-display)] text-xl font-bold text-white">
+          {% if lang == 'en' %}{{ model.name_en }}{% else %}{{ model.name_lt }}{% endif %}
+        </h2>
+        <p class="mt-2 text-sm text-stone-300">
+          {% if lang == 'en' %}{{ model.description_en }}{% else %}{{ model.description_lt }}{% endif %}
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2 text-xs text-stone-400">
+          <span class="px-2.5 py-1 rounded-lg bg-white/5">{{ model.default_config_json.width }} × {{ model.default_config_json.depth }} cm</span>
+          <span class="px-2.5 py-1 rounded-lg bg-white/5">{{ model.base_price|floatformat:0 }} €</span>
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+        <a href="{% url 'catalog:detail' model.slug %}" class="text-xs text-stone-300 hover:text-white">{% if lang == 'en' %}Details{% else %}Plačiau{% endif %}</a>
+        <a href="{% url 'configurator:index' %}?preset={{ model.slug }}" class="px-4 py-2 rounded-xl bg-[#c89b6e] text-[#12100e] text-xs font-semibold">
+          {% if lang == 'en' %}Configure 3D{% else %}Konfigūruoti 3D{% endif %}
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

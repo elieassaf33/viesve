@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}3D Konfiguratorius — Viesvė{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<script id="configurator-bootstrap" type="application/json">{{ bootstrap_json|safe }}</script>
+
+<div x-data="viesveConfiguratorApp()" x-init="init()" class="pt-20 h-screen flex flex-col lg:flex-row overflow-hidden bg-[#12100e]">
+  <!-- Left: Interactive 3D Viewport -->
+  <div class="relative flex-1 h-[52vh] lg:h-full bg-[#141210]">
+    <canvas id="configurator-canvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
+
+    <!-- Top-left Live Dimensions & Price Pill -->
+    <div class="absolute top-4 left-4 glass-hud rounded-2xl px-4 py-2.5 flex items-center gap-4 text-xs">
+      <div>
+        <div class="text-stone-400">{% if lang == 'en' %}Dimensions{% else %}Matmenys{% endif %}</div>
+        <div class="font-semibold text-white" x-text="`${config.width} × ${config.depth} × ${config.wallHeight} cm`"></div>
+      </div>
+      <div class="h-6 w-px bg-white/10"></div>
+      <div>
+        <div class="text-stone-400">{% if lang == 'en' %}Estimated Price{% else %}Kaina su PVM{% endif %}</div>
+        <div class="font-bold text-[#c89b6e] text-base" x-text="`${Number(totalPrice).toFixed(0)} €`"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Camera Presets & AR Launch -->
+    <div class="absolute bottom-4 inset-x-4 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
+      <div class="glass-hud rounded-xl p-1 flex items-center gap-1 text-xs pointer-events-auto">
+        <button @click="setCamera('overview')" class="px-3 py-1.5 rounded-lg hover:bg-white/10 transition">{% if lang == 'en' %}3D Overview{% else %}3D Apžvalga{% endif %}</button>
+        <button @click="setCamera('front')" class="px-3 py-1.5 rounded-lg hover:bg-white/10 transition">{% if lang == 'en' %}Front{% else %}Priekis{% endif %}</button>
+        <button @click="setCamera('interior')" class="px-3 py-1.5 rounded-lg hover:bg-white/10 transition">{% if lang == 'en' %}Interior{% else %}Vidus{% endif %}</button>
+        <button @click="setCamera('top')" class="px-3 py-1.5 rounded-lg hover:bg-white/10 transition">{% if lang == 'en' %}Floorplan{% else %}Planas{% endif %}</button>
+      </div>
+
+      <div class="flex items-center gap-2 pointer-events-auto">
+        <div class="glass-hud rounded-xl px-3 py-1.5 flex items-center gap-2 text-xs">
+          <span class="text-stone-400">{% if lang == 'en' %}Glass Doors{% else %}Stiklo durys{% endif %}</span>
+          <input type="range" min="0" max="1" step="0.05" x-model.number="glassOpen" @input="onGlassSlideChange()" class="w-20 viesve-range">
+        </div>
+        <button @click="openArPreview()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-[#c89b6e] hover:text-[#12100e] text-white text-xs font-semibold transition glass-hud">
+          📱 {% if lang == 'en' %}View in Your Garden (AR){% else %}Peržiūrėti savo kieme (AR){% endif %}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Step-by-Step Control Sidebar -->
+  <aside class="w-full lg:w-[430px] h-[48vh] lg:h-full border-t lg:border-t-0 lg:border-l border-white/10 bg-[#171412] flex flex-col">
+    <!-- Step Tabs -->
+    <div class="grid grid-cols-5 border-b border-white/10 text-[11px] font-medium">
+      <button @click="step = 1" :class="step === 1 ? 'text-[#c89b6e] border-b-2 border-[#c89b6e] bg-white/5' : 'text-stone-400'" class="py-3 text-center transition">1. {% if lang == 'en' %}Size{% else %}Matmenys{% endif %}</button>
+      <button @click="step = 2" :class="step === 2 ? 'text-[#c89b6e] border-b-2 border-[#c89b6e] bg-white/5' : 'text-stone-400'" class="py-3 text-center transition">2. {% if lang == 'en' %}Roof{% else %}Stogas{% endif %}</button>
+      <button @click="step = 3" :class="step === 3 ? 'text-[#c89b6e] border-b-2 border-[#c89b6e] bg-white/5' : 'text-stone-400'" class="py-3 text-center transition">3. {% if lang == 'en' %}Walls{% else %}Sienos{% endif %}</button>
+      <button @click="step = 4" :class="step === 4 ? 'text-[#c89b6e] border-b-2 border-[#c89b6e] bg-white/5' : 'text-stone-400'" class="py-3 text-center transition">4. {% if lang == 'en' %}Finish{% else %}Apdaila{% endif %}</button>
+      <button @click="step = 5" :class="step === 5 ? 'text-[#c89b6e] border-b-2 border-[#c89b6e] bg-white/5' : 'text-stone-400'" class="py-3 text-center transition">5. {% if lang == 'en' %}Quote{% else %}Suvestinė{% endif %}</button>
+    </div>
+
+    <!-- Step Content -->
+    <div class="flex-1 overflow-y-auto p-5 space-y-6">
+      <!-- STEP 1: Dimensions -->
+      <div x-show="step === 1" class="space-y-5">
+        <div>
+          <label class="text-xs text-stone-400 block mb-2">{% if lang == 'en' %}Quick Presets{% else %}Modelio šablonas{% endif %}</label>
+          <div class="grid grid-cols-2 gap-2">
+            <template x-for="p in presets" :key="p.slug">
+              <button @click="applyPreset(p)" class="text-left px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs transition">
+                <div class="font-medium text-white" x-text="{% if lang == 'en' %}p.name_en{% else %}p.name_lt{% endif %}"></div>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-stone-300">{% if lang == 'en' %}Width{% else %}Plotis{% endif %}</span>
+            <span class="font-semibold text-[#c89b6e]" x-text="`${config.width} cm`"></span>
+          </div>
+          <input type="range" min="250" max="600" step="10" x-model.number="config.width" @input.debounce.80ms="onConfigChange()" class="viesve-range">
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-stone-300">{% if lang == 'en' %}Depth{% else %}Gylis{% endif %}</span>
+            <span class="font-semibold text-[#c89b6e]" x-text="`${config.depth} cm`"></span>
+          </div>
+          <input type="range" min="250" max="600" step="10" x-model.number="config.depth" @input.debounce.80ms="onConfigChange()" class="viesve-range">
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-stone-300">{% if lang == 'en' %}Wall Height{% else %}Sienų aukštis{% endif %}</span>
+            <span class="font-semibold text-[#c89b6e]" x-text="`${config.wallHeight} cm`"></span>
+          </div>
+          <input type="range" min="210" max="260" step="5" x-model.number="config.wallHeight" @input.debounce.80ms="onConfigChange()" class="viesve-range">
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-stone-300">{% if lang == 'en' %}Roof Overhang{% else %}Stogo iškyša{% endif %}</span>
+            <span class="font-semibold text-[#c89b6e]" x-text="`${config.overhang} cm`"></span>
+          </div>
+          <input type="range" min="20" max="40" step="5" x-model.number="config.overhang" @input.debounce.80ms="onConfigChange()" class="viesve-range">
+        </div>
+
+        <div class="p-3 rounded-xl bg-white/5 text-xs text-stone-300 flex justify-between">
+          <span>140×140 mm {% if lang == 'en' %}Posts{% else %}stulpai{% endif %}:</span>
+          <strong class="text-white" x-text="`${bom.total_posts || 4} vnt.`"></strong>
+        </div>
+      </div>
+
+      <!-- STEP 2: Roof -->
+      <div x-show="step === 2" class="space-y-5">
+        <div>
+          <label class="text-xs text-stone-400 block mb-2">{% if lang == 'en' %}Roof Shape{% else %}Stogo forma{% endif %}</label>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button @click="config.roofType = 'pyramid'; onConfigChange()" :class="config.roofType === 'pyramid' ? 'border-[#c89b6e] bg-[#c89b6e]/15 text-white' : 'border-white/10 bg-white/5 text-stone-400'" class="p-3 rounded-xl border text-xs font-medium transition">
+              {% if lang == 'en' %}4-Sided Pyramid{% else %}4-šlaitis piramidinis{% endif %}
+            </button>
+            <button @click="config.roofType = 'flat'; onConfigChange()" :class="config.roofType === 'flat' ? 'border-[#c89b6e] bg-[#c89b6e]/15 text-white' : 'border-white/10 bg-white/5 text-stone-400'" class="p-3 rounded-xl border text-xs font-medium transition">
+              {% if lang == 'en' %}Flat / Pent Roof{% else %}Plokščias stogas{% endif %}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs text-stone-400 block mb-2">{% if lang == 'en' %}Roof Covering{% else %}Stogo danga{% endif %}</label>
+          <div class="space-y-2">
+            <template x-for="rf in roofFinishes" :key="rf.code">
+              <button @click="config.roofFinish = rf.code; onConfigChange()" :class="config.roofFinish === rf.code ? 'border-[#c89b6e] bg-white/10' : 'border-white/10 bg-white/5'" class="w-full flex items-center justify-between p-3 rounded-xl border text-xs transition">
+                <div class="flex items-center gap-3">
+                  <span class="w-5 h-5 rounded-md border border-white/20" :style="`background:${rf.hex_color}`"></span>
+                  <span class="text-white" x-text="{% if lang == 'en' %}rf.name_en{% else %}rf.name_lt{% endif %}"></span>
+                </div>
+                <span class="text-stone-400" x-text="`${rf.price_per_m2} €/m²`"></span>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <label class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 text-xs cursor-pointer">
+          <span>{% if lang == 'en' %}Rain Gutter & Decorative Finial{% else %}Lietvamzdžiai ir stogo viršūnė{% endif %}</span>
+          <input type="checkbox" x-model="config.includeGutterFinial" @change="onConfigChange()" class="accent-[#c89b6e] w-4 h-4">
+        </label>
+      </div>
+
+      <!-- STEP 3: Walls & Doors -->
+      <div x-show="step === 3" class="space-y-5">
+        <p class="text-xs text-stone-400">
+          {% if lang == 'en' %}Select a side below or click any wall directly in the 3D view.{% else %}Pasirinkite pusę žemiau arba spauskite tiesiai ant sienos 3D modelyje.{% endif %}
+        </p>
+        <div class="grid grid-cols-4 gap-1.5 text-xs">
+          <button @click="activeBay = 'front'" :class="activeBay === 'front' ? 'bg-[#c89b6e] text-[#12100e] font-semibold' : 'bg-white/5 text-stone-300'" class="py-2 rounded-lg">{% if lang == 'en' %}Front{% else %}Priekis{% endif %}</button>
+          <button @click="activeBay = 'back'" :class="activeBay === 'back' ? 'bg-[#c89b6e] text-[#12100e] font-semibold' : 'bg-white/5 text-stone-300'" class="py-2 rounded-lg">{% if lang == 'en' %}Back{% else %}Galas{% endif %}</button>
+          <button @click="activeBay = 'left'" :class="activeBay === 'left' ? 'bg-[#c89b6e] text-[#12100e] font-semibold' : 'bg-white/5 text-stone-300'" class="py-2 rounded-lg">{% if lang == 'en' %}Left{% else %}Kairė{% endif %}</button>
+          <button @click="activeBay = 'right'" :class="activeBay === 'right' ? 'bg-[#c89b6e] text-[#12100e] font-semibold' : 'bg-white/5 text-stone-300'" class="py-2 rounded-lg">{% if lang == 'en' %}Right{% else %}Dešinė{% endif %}</button>
+        </div>
+
+        <div class="space-y-2">
+          <template x-for="opt in [
+            {id:'open', label:'{% if lang == 'en' %}Open Bay{% else %}Atvira anga{% endif %}'},
+            {id:'solid', label:'{% if lang == 'en' %}Solid Tongue-and-Groove Wall{% else %}Aklina špuntuotų lentų siena{% endif %}'},
+            {id:'half', label:'{% if lang == 'en' %}Half-Wall / Balustrade (90 cm){% else %}Pusės aukščio sienelė (90 cm){% endif %}'},
+            {id:'glass', label:'{% if lang == 'en' %}Sliding Tempered Glass Doors{% else %}Stumdomos grūdinto stiklo durys{% endif %}'},
+            {id:'louver', label:'{% if lang == 'en' %}Wooden Louver Screen{% else %}Medinės žaliuzės / tašeliai{% endif %}'}
+          ]" :key="opt.id">
+            <button @click="config.walls[activeBay] = opt.id; onConfigChange()" :class="config.walls[activeBay] === opt.id ? 'border-[#c89b6e] bg-[#c89b6e]/15 text-white' : 'border-white/10 bg-white/5 text-stone-300'" class="w-full text-left px-4 py-3 rounded-xl border text-xs font-medium transition" x-text="opt.label"></button>
+          </template>
+        </div>
+      </div>
+
+      <!-- STEP 4: Wood Treatment & Decking -->
+      <div x-show="step === 4" class="space-y-5">
+        <div>
+          <label class="text-xs text-stone-400 block mb-2">{% if lang == 'en' %}Timber Stain / Paint{% else %}Medienos apdaila ir spalva{% endif %}</label>
+          <div class="space-y-2">
+            <template x-for="wf in woodFinishes" :key="wf.code">
+              <button @click="config.woodFinish = wf.code; onConfigChange()" :class="config.woodFinish === wf.code ? 'border-[#c89b6e] bg-white/10' : 'border-white/10 bg-white/5'" class="w-full flex items-center justify-between p-3 rounded-xl border text-xs transition">
+                <div class="flex items-center gap-3">
+                  <span class="w-6 h-6 rounded-full border border-white/20" :style="`background:${wf.hex_color}`"></span>
+                  <span class="text-white" x-text="{% if lang == 'en' %}wf.name_en{% else %}wf.name_lt{% endif %}"></span>
+                </div>
+                <span class="text-stone-400" x-text="wf.price_per_liter > 0 ? `${wf.price_per_liter} €/L` : '{% if lang == 'en' %}Base{% else %}Bazė{% endif %}'"></span>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <label class="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 text-xs cursor-pointer">
+          <span>{% if lang == 'en' %}Impregnated Terrace Floor Decking{% else %}Impregnuotos terasinės grindys{% endif %}</span>
+          <input type="checkbox" x-model="config.includeDecking" @change="onConfigChange()" class="accent-[#c89b6e] w-4 h-4">
+        </label>
+      </div>
+
+      <!-- STEP 5: Summary, BOM, PDF & Quote -->
+      <div x-show="step === 5" class="space-y-4">
+        <div class="rounded-xl bg-white/5 border border-white/10 p-4 space-y-2 text-xs">
+          <div class="font-semibold text-white mb-2">{% if lang == 'en' %}Bill of Materials & Pricing{% else %}Sąmata ir medžiagų specifikacija{% endif %}</div>
+          <template x-for="item in (bom.items || [])" :key="item.code">
+            <div class="flex justify-between gap-2 text-stone-300 border-b border-white/5 pb-1.5">
+              <span x-text="{% if lang == 'en' %}item.label_en{% else %}item.label_lt{% endif %}"></span>
+              <span class="whitespace-nowrap text-white font-medium" x-text="`${Number(item.total).toFixed(0)} €`"></span>
+            </div>
+          </template>
+          <div class="flex justify-between pt-2 text-sm font-bold text-[#c89b6e]">
+            <span>{% if lang == 'en' %}Total (incl. VAT){% else %}Viso (su PVM){% endif %}</span>
+            <span x-text="`${Number(totalPrice).toFixed(2)} €`"></span>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button @click="saveConfiguration()" :disabled="saving" class="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold transition">
+            {% if lang == 'en' %}Save & Share Link{% else %}Išsaugoti ir dalintis{% endif %}
+          </button>
+          <template x-if="pdfUrl">
+            <a :href="pdfUrl" target="_blank" class="flex-1 py-2.5 rounded-xl bg-[#c89b6e]/20 text-[#c89b6e] hover:bg-[#c89b6e] hover:text-[#12100e] text-center text-xs font-semibold transition">
+              {% if lang == 'en' %}Download PDF{% else %}Atsisiųsti PDF{% endif %}
+            </a>
+          </template>
+        </div>
+
+        <template x-if="shareUrl">
+          <div class="p-3 rounded-xl bg-[#c89b6e]/10 border border-[#c89b6e]/30 text-xs">
+            <div class="text-[#c89b6e] font-medium mb-1">{% if lang == 'en' %}Shareable Configuration Link:{% else %}Nuoroda dalinimuisi:{% endif %}</div>
+            <a :href="shareUrl" class="underline text-white break-all" x-text="window.location.origin + shareUrl"></a>
+          </div>
+        </template>
+
+        <!-- Quote Submission Form -->
+        <div class="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3" x-show="!quoteSubmitted">
+          <div class="text-xs font-semibold text-white">{% if lang == 'en' %}Request Official Quote{% else %}Pateikti užklausą gamybai{% endif %}</div>
+          <input type="text" x-model="quoteForm.customer_name" placeholder="{% if lang == 'en' %}Full Name *{% else %}Vardas, Pavardė *{% endif %}" class="w-full px-3 py-2 rounded-lg bg-[#12100e] border border-white/10 text-xs text-white focus:border-[#c89b6e] outline-none">
+          <input type="email" x-model="quoteForm.customer_email" placeholder="{% if lang == 'en' %}Email *{% else %}El. paštas *{% endif %}" class="w-full px-3 py-2 rounded-lg bg-[#12100e] border border-white/10 text-xs text-white focus:border-[#c89b6e] outline-none">
+          <input type="text" x-model="quoteForm.customer_phone" placeholder="{% if lang == 'en' %}Phone{% else %}Telefonas{% endif %}" class="w-full px-3 py-2 rounded-lg bg-[#12100e] border border-white/10 text-xs text-white focus:border-[#c89b6e] outline-none">
+          <textarea x-model="quoteForm.customer_notes" rows="2" placeholder="{% if lang == 'en' %}Delivery city or notes...{% else %}Miestas ar papildomos pastabos...{% endif %}" class="w-full px-3 py-2 rounded-lg bg-[#12100e] border border-white/10 text-xs text-white focus:border-[#c89b6e] outline-none"></textarea>
+          <p x-show="quoteError" class="text-xs text-red-400" x-text="quoteError"></p>
+          <button @click="submitQuote()" :disabled="saving" class="w-full py-3 rounded-xl bg-[#c89b6e] hover:bg-[#d8ae82] text-[#12100e] font-semibold text-xs transition">
+            {% if lang == 'en' %}Submit Quote Request{% else %}Siųsti užklausą{% endif %}
+          </button>
+        </div>
+
+        <div x-show="quoteSubmitted" class="p-4 rounded-xl bg-emerald-900/30 border border-emerald-500/40 text-xs text-emerald-200">
+          {% if lang == 'en' %}Thank you! Your 3D configuration and quote request have been saved.{% else %}Ačiū! Jūsų 3D konfigūracija ir užklausa sėkmingai išsiųsta.{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Step Navigation -->
+    <div class="p-4 border-t border-white/10 flex items-center justify-between bg-[#141210]">
+      <button @click="step = Math.max(1, step - 1)" :disabled="step === 1" class="px-4 py-2 rounded-xl bg-white/5 text-xs text-stone-300 disabled:opacity-30">← {% if lang == 'en' %}Back{% else %}Atgal{% endif %}</button>
+      <div class="text-xs text-stone-400" x-text="`${step} / 5`"></div>
+      <button @click="step = Math.min(5, step + 1)" x-show="step < 5" class="px-5 py-2 rounded-xl bg-[#c89b6e] text-[#12100e] text-xs font-semibold">{% if lang == 'en' %}Next{% else %}Toliau{% endif %} →</button>
+      <button @click="saveConfiguration()" x-show="step === 5" class="px-5 py-2 rounded-xl bg-[#c89b6e] text-[#12100e] text-xs font-semibold">{% if lang == 'en' %}Save{% else %}Išsaugoti{% endif %}</button>
+    </div>
+  </aside>
+
+  <!-- AR <model-viewer> Modal -->
+  <div x-show="arModalOpen" x-cloak class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4" @click.self="arModalOpen = false">
+    <div class="glass-hud rounded-2xl max-w-2xl w-full p-6 relative">
+      <button @click="arModalOpen = false" class="absolute top-4 right-4 text-stone-400 hover:text-white text-xl">&times;</button>
+      <h3 class="font-[family-name:var(--font-display)] text-lg font-semibold text-white mb-2">
+        {% if lang == 'en' %}AR Preview — View in Your Garden{% else %}AR Peržiūra — Peržiūrėti savo kieme{% endif %}
+      </h3>
+      <p class="text-xs text-stone-400 mb-4">
+        {% if lang == 'en' %}On mobile devices, tap the AR icon to place your 1:1 scale 3D structure in your yard.{% else %}Mobiliajame įrenginyje paspauskite AR mygtuką, kad patalpintumėte 1:1 mastelio pavėsinę savo kieme.{% endif %}
+      </p>
+      <div class="w-full h-80 rounded-xl overflow-hidden bg-[#12100e]">
+        <model-viewer
+          :src="arGlbUrl"
+          ar
+          ar-modes="webxr scene-viewer quick-look"
+          camera-controls
+          shadow-intensity="1"
+          style="width: 100%; height: 100%;"
+        ></model-viewer>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,82 @@
+﻿{% load i18n static %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'lt' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Viesvė — Architektūrinės medinės pavėsinės ir 3D konfiguratorius{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'dist/assets/main.css' %}">
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+  {% block extra_head %}{% endblock %}
+</head>
+<body data-static="{% static '' %}" class="bg-[#0e0d0b] text-[#f5f2ed] min-h-screen flex flex-col selection:bg-[#c89b6e] selection:text-[#12100e]">
+  <header class="fixed top-0 inset-x-0 z-50 px-4 sm:px-8 py-4 pointer-events-none">
+    <nav class="max-w-7xl mx-auto glass-hud rounded-2xl px-5 py-3 flex items-center justify-between pointer-events-auto">
+      <a href="{% url 'core:home' %}" class="flex items-center gap-3 group">
+        <span class="w-8 h-8 rounded-lg bg-[#c89b6e] text-[#12100e] flex items-center justify-center font-bold tracking-tighter text-sm">V</span>
+        <span class="font-[family-name:var(--font-display)] font-semibold tracking-wider text-base uppercase">Viesvė</span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-7 text-sm text-stone-300">
+        <a href="{% url 'catalog:list' %}" class="hover:text-[#c89b6e] transition">{% if lang == 'en' %}Catalog{% else %}Katalogas{% endif %}</a>
+        <a href="{% url 'core:portfolio' %}" class="hover:text-[#c89b6e] transition">{% if lang == 'en' %}Projects{% else %}Projektai{% endif %}</a>
+        <a href="{% url 'core:about' %}" class="hover:text-[#c89b6e] transition">{% if lang == 'en' %}About{% else %}Apie mus{% endif %}</a>
+        <a href="{% url 'core:contact' %}" class="hover:text-[#c89b6e] transition">{% if lang == 'en' %}Contact{% else %}Kontaktai{% endif %}</a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <form action="{% url 'set_language' %}" method="post" class="flex items-center bg-white/5 rounded-lg p-0.5 text-xs">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" name="language" value="lt" class="px-2 py-1 rounded-md transition {% if lang != 'en' %}bg-[#c89b6e] text-[#12100e] font-semibold{% else %}text-stone-400 hover:text-white{% endif %}">LT</button>
+          <button type="submit" name="language" value="en" class="px-2 py-1 rounded-md transition {% if lang == 'en' %}bg-[#c89b6e] text-[#12100e] font-semibold{% else %}text-stone-400 hover:text-white{% endif %}">EN</button>
+        </form>
+        <a href="{% url 'configurator:index' %}" class="px-4 py-2 rounded-xl bg-[#c89b6e] hover:bg-[#d8ae82] text-[#12100e] font-semibold text-xs sm:text-sm transition shadow-lg shadow-[#c89b6e]/15">
+          {% if lang == 'en' %}3D Configurator{% else %}3D Konfiguratorius{% endif %}
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block footer %}
+  <footer class="border-t border-white/10 bg-[#0b0a08] py-12 px-6 mt-24">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-stone-400">
+      <div>
+        <div class="font-[family-name:var(--font-display)] text-white font-semibold tracking-wider uppercase mb-3">Viesvė</div>
+        <p class="leading-relaxed">
+          {% if lang == 'en' %}
+            Architectural timber gazebos, pergolas, and garden structures engineered with CNC precision in Lithuania.
+          {% else %}
+            Architektūrinės medinės pavėsinės, pergolos ir sodo statiniai, suprojektuoti ir pagaminti Lietuvoje su CNC tikslumu.
+          {% endif %}
+        </p>
+      </div>
+      <div>
+        <div class="text-white font-medium mb-3">{% if lang == 'en' %}Navigation{% else %}Navigacija{% endif %}</div>
+        <ul class="space-y-2">
+          <li><a href="{% url 'configurator:index' %}" class="hover:text-[#c89b6e]">{% if lang == 'en' %}3D Parametric Configurator{% else %}3D Parametrinis konfiguratorius{% endif %}</a></li>
+          <li><a href="{% url 'catalog:list' %}" class="hover:text-[#c89b6e]">{% if lang == 'en' %}Product Catalog{% else %}Produktų katalogas{% endif %}</a></li>
+          <li><a href="{% url 'core:portfolio' %}" class="hover:text-[#c89b6e]">{% if lang == 'en' %}Realized Projects{% else %}Įgyvendinti projektai{% endif %}</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="text-white font-medium mb-3">{% if lang == 'en' %}Contact{% else %}Kontaktai{% endif %}</div>
+        <p>info@viesve.lt · +370 600 00000</p>
+        <p class="mt-1">Vilnius, Lietuva</p>
+      </div>
+    </div>
+  </footer>
+  {% endblock %}
+
+  <script type="module" src="{% static 'dist/main.js' %}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
+
